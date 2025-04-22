@@ -99,9 +99,22 @@ async def handle_group_message(websocket, msg):
                 question = raw_message[4:]
                 answer = await request_answer_book(question)
                 if answer.get("code") == 200:
-                    await send_group_msg(websocket, group_id, answer.get("msg"))
+                    # 格式化完整的返回数据
+                    data = answer.get("data", {})
+                    formatted_response = f"""
+{data.get('title_zh', '')}
+{data.get('description_zh', '')}
+{data.get('title_en', '')}
+{data.get('description_en', '')}"""
+                    await send_group_msg(
+                        websocket,
+                        group_id,
+                        f"[CQ:reply,id={message_id}]{formatted_response}",
+                    )
                 else:
-                    await send_group_msg(websocket, group_id, answer.get("msg"))
+                    await send_group_msg(
+                        websocket, group_id, answer.get("msg", "请求失败")
+                    )
     except Exception as e:
         logging.error(f"处理AnswerBook群消息失败: {e}")
         await send_group_msg(
